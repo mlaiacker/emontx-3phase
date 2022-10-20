@@ -60,18 +60,18 @@
 */
 const int version = 14;                          // The firmware version 1.4
 
-#define EMONTX_V34                               // Sets the I/O pin allocation. 
+#define EMONTX_NANO                               // Sets the I/O pin allocation. 
                                                  // use EMONTX_V2 or EMONTX_V32 or EMONTX_V34 or EMONTX_SHIELD as appropriate
                                                  // NOTE: You must still set the correct calibration coefficients
 
 //--------------------------------------------------------------------------------------------------
-// #define DEBUGGING                             // enable this line to include debugging print statements
+#define DEBUGGING                             // enable this line to include debugging print statements
                                                  //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
 
 #define SERIALPRINT                              // include 'human-friendly' print statement for commissioning - comment this line to exclude.
 
 // Pulse counting settings
-#define USEPULSECOUNT                            // include the ability to count pulses. Comment this line if pulse counting is not required.
+#undef USEPULSECOUNT                            // include the ability to count pulses. Comment this line if pulse counting is not required.
 #define PULSEINT 1                               // Interrupt no. for pulse counting: EmonTx V2 = 0, EmonTx V3 = 1, EmonTx Shield - see Wiki
 #define PULSEPIN 3                               // Interrupt input pin: EmonTx V2 = 2, EmonTx V3 = 3, EmonTx Shield - see Wiki
 #define PULSEMINPERIOD 110                       // minimum period between pulses (ms) - default pulse output meters = 100ms
@@ -79,7 +79,7 @@ const int version = 14;                          // The firmware version 1.4
                                                  
 // RFM settings                                  // THIS SKETCH WILL NOT WORK WITH THE RFM12B radio.
 //#define EMONESP                                // Uncomment to use the sketch with EmonESP and comment out the line below #define RFM69CW
-#define RFM69CW                                  // The type of Radio Module, or none.
+#undef RFM69CW                                  // The type of Radio Module, or none.
                                                  // Can be RFM69CW 
                                                  //   or SERIALOUT if a wired serial connection is used 
                                                  //   or EMONESP if an ESP WiFi module is used
@@ -133,7 +133,7 @@ double i4Lead = 0.20;     // degrees by which the v.t. phase error leads the c.t
 #define CT1Phase PHASE1   // either PHASE1, PHASE2 or PHASE3 to attach c.t.1 to a phase. This c.t. MUST be used.
 #define CT2Phase PHASE2   // similarly to attach c.t.2 to a phase. This c.t. MUST be used.
 #define CT3Phase PHASE3   // similarly to attach c.t.3 to a phase. This c.t. MUST be used, do not comment this line.
-#define CT4Phase PHASE1   // similarly to attach c.t.4 to a phase or comment this line if c.t.4 is not used 
+//#define CT4Phase PHASE1   // similarly to attach c.t.4 to a phase or comment this line if c.t.4 is not used 
                           //   (See also NUMSAMPLES below)
 #define LEDISLOCK         // comment this out for LED pulsed during transmission
                           //  otherwise LED shows loop is locked, and occults to show transmission, but that is not easily visible
@@ -141,7 +141,7 @@ double i4Lead = 0.20;     // degrees by which the v.t. phase error leads the c.t
 
 //--------------------------------------------------------------------------------------------------
 // other system constants
-#define SUPPLY_VOLTS 3.3  // used here because it's more accurate than the internal band-gap reference. Use 5.0 for Arduino / emonTx Shield
+#define SUPPLY_VOLTS 5.0  // used here because it's more accurate than the internal band-gap reference. Use 5.0 for Arduino / emonTx Shield
 #define SUPPLY_FREQUENCY 50
 #define NUMSAMPLES 36     // number of times to sample each 50/60Hz cycle - for a 4-wire system, this must be a multiple of 3;
                           //   for a 3-wire system, it must be a multiple of 6
@@ -149,7 +149,7 @@ double i4Lead = 0.20;     // degrees by which the v.t. phase error leads the c.t
                           //                                          50 Hz, 4 c.t: 36         60 Hz, 4 c.t: 33
 #define ADC_BITS 10       // ADC Resolution
 #define ADC_RATE 64       // Time between successive ADC conversions in microseconds
-#define LOOPTIME 5000     // time of outer loop in milliseconds, also time between data transmissions
+#define LOOPTIME 2000     // time of outer loop in milliseconds, also time between data transmissions
 
 #define PLLTIMERRANGE 100 // PLL timer range limit ~ +/-0.5Hz
 #define PLLLOCKRANGE 40   // allowable ADC range to enter locked state
@@ -214,7 +214,9 @@ double i4Lead = 0.20;     // degrees by which the v.t. phase error leads the c.t
 #define SDOPIN 12
 #define W1PIN 4       // 1-Wire pin for temperature
 
-#else
+#elif defined(EMONTX_V34)
+
+
 // EmonTx v3.4 Pin references
 #define VOLTSPIN 0
 #define CT1PIN 1
@@ -230,6 +232,22 @@ double i4Lead = 0.20;     // degrees by which the v.t. phase error leads the c.t
 #define DIP_SWITCH1 8   // Voltage selection 230 / 110 V AC (switch off = 230V)  - with switch off, D8 is HIGH from internal pullup [Not used]
 #define DIP_SWITCH2 9   // RF node ID (off = no change in node ID, switch on = nodeID -1) with switch off, D9 is HIGH from internal pullup
 
+#elif defined(EMONTX_NANO)
+
+// EmonTx Nano Pin references
+#define VOLTSPIN 0
+#define CT1PIN 1
+#define CT2PIN 2
+#define CT3PIN 3
+#define LEDPIN LED_BUILTIN
+#define LED_L1 4 // on with power > 50 blinking if power < -50
+#define LED_L2 5
+#define LED_L3 6
+#define W1PIN 8         // 1-Wire pin for temperature
+#define RFMSELPIN 10    // Pins for the RFM Radio module
+
+#else
+#error "no board defined"
 #endif
 //--------------------------------------------------------------------------------------------------
 
@@ -327,11 +345,12 @@ double applyPhaseShift(double phaseShift, double sampleRate, double A, double B)
 double deg_rad(double a);
 
 float Vrms, I1rms, I2rms, I3rms, I4rms;
-long sumTimerCount;
+long sumTimerCount; 
 float realPower1,apparentPower1,powerFactor1;
 float realPower2,apparentPower2,powerFactor2;
 float realPower3,apparentPower3,powerFactor3;
 float realPower4,apparentPower4,powerFactor4;
+double realEnergyWh __attribute__ ((section (".noinit")));
 float powerFactor12;
 float frequency;
 volatile word timerCount=TIMERTOP;
@@ -374,21 +393,44 @@ void setup()
   #endif
   pinMode (RFMSELPIN, OUTPUT);
   digitalWrite(RFMSELPIN,HIGH);
+  #ifdef LED_L1
+  pinMode (LED_L1, OUTPUT);
+  digitalWrite(LED_L1,LOW);
+  #endif
+  #ifdef LED_L2
+  pinMode (LED_L2, OUTPUT);
+  digitalWrite(LED_L2,LOW);
+  #endif
+  #ifdef LED_L3
+  pinMode (LED_L3, OUTPUT);
+  digitalWrite(LED_L3,LOW);
+  #endif
 
   
   for (byte i=0; i<4; i++)
   {
       digitalWrite(LEDPIN, LOW); delay(200); digitalWrite(LEDPIN, HIGH); delay(200);
   }
-    
+  // init if invalid (lost power)
+  if( isnan(realEnergyWh) ) {
+    realEnergyWh = 0.0;
+  }
+  if( realEnergyWh > 1e6 ) {
+    realEnergyWh = 0.0;
+  }
+  if( realEnergyWh < -1e6 ) {
+    realEnergyWh = 0.0;
+  }
+
+
  // start the SPI library:
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
   SPI.setDataMode(0);
   SPI.setClockDivider(SPI_CLOCK_DIV8);
   // initialise RFM69
-  delay(200); // wait for RFM12 POR
   #ifdef RFM69CW
+    delay(200); // wait for RFM12 POR
     rfm_init();
   #endif
   
@@ -413,6 +455,9 @@ digitalWrite(LEDPIN, LOW);
    #endif
    #ifdef EMONTX_SHIELD    
      Serial.print(F("emonTx Shield"));
+   #endif    
+   #ifdef EMONTX_NANO  
+     Serial.print(F("emonTx Nano"));
    #endif    
    Serial.print(F(" CT1234 Voltage 3 Phase PLL example - Firmware version "));
    Serial.println(version/10.0);
@@ -862,6 +907,36 @@ void calculateVIPF()
   sumCycleCount=0;
   sumTimerCount=0;
 
+  #ifdef LED_L1
+  if(emontx.power1>50) {
+    digitalWrite(LED_L1, HIGH);
+  } else if(emontx.power1<-50) {
+    digitalWrite(LED_L1, !digitalRead(LED_L1)); // toggle
+  } else {
+    digitalWrite(LED_L1, LOW);
+  }
+  #endif
+  #ifdef LED_L2
+  if(emontx.power2>50) {
+    digitalWrite(LED_L2, HIGH);
+  } else if(emontx.power2<-50) {
+    digitalWrite(LED_L2, !digitalRead(LED_L2)); // toggle
+  } else {
+    digitalWrite(LED_L2, LOW);
+  }
+  #endif
+  #ifdef LED_L3
+  if(emontx.power3>50) {
+    digitalWrite(LED_L3, HIGH);
+  } else if(emontx.power3<-50) {
+    digitalWrite(LED_L3, !digitalRead(LED_L3)); // toggle
+  } else {
+    digitalWrite(LED_L3, LOW);
+  }
+  #endif
+
+  float power = realPower1+realPower2+realPower3;
+  realEnergyWh += power*1000/LOOPTIME/3600; // accumulate Wh
 }
 
 void calculateConstants(void)
@@ -972,7 +1047,7 @@ void sendResults()
     Serial.print(F(" "));
     Serial.print(I3rms,3);
     Serial.print(F(" "));
-    Serial.print(I4rms,3);
+    Serial.print(realPower1+realPower2+realPower3,1);
     Serial.print(F(" "));
     #if WIRES == 3-WIRE
     Serial.print(realPower1 + realPower2);
@@ -985,10 +1060,10 @@ void sendResults()
     #endif
     Serial.print(realPower3);
     Serial.print(F(" "));
-    Serial.print(realPower4);
+    Serial.print(realEnergyWh,1);
     Serial.print(F(" "));
 
-    Serial.print(frequency,3);
+    Serial.print(frequency,2);
     Serial.print(F(" "));
 
     #if WIRES == 3-WIRE
@@ -1004,7 +1079,7 @@ void sendResults()
     Serial.print(F(" "));
     Serial.print(powerFactor4,4);
     Serial.print(F(" "));
-    Serial.print((float)emontx.temp[0]/100);
+    Serial.print((float)emontx.temp[0]/100,2);
 
     #ifdef USEPULSECOUNT
       Serial.print(F(" Pulses=")); Serial.print(emontx.pulseCount);
