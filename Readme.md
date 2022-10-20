@@ -15,10 +15,10 @@ Pulse counting and temperature monitoring using a single DS18B20 sensor is suppo
 
 ## Key Feautures
 
-- Continuous monitoring of one voltage channel and up 4 current channels.
+- Continuous monitoring of one voltage channel and up 3 current channels.
 - Gives an accurate measure of rapidly varying loads.
-- 1800 sample sets per second – using 4 channels of an emonTx V3.4 @ 50 Hz
-- Calculates rms voltage, rms current, real & apparent power & power factor.
+- 1800 sample sets per second – using 3 channels of an arduino nano @ 50 Hz
+- Calculates rms voltage, rms current, real & apparent power & power factor, power sum and consumed Wh.
 - Pulse input for supply meter monitoring.
 - Integrated temperature measurement (one DS18B20 sensor).
 - User-defined reporting interval.
@@ -54,10 +54,10 @@ The sketch is not compatible with the RFM12B radio module, nor the Arduino Due.
 
 ## Required Hardware
 
-- emonTx V3.4
+- arduino nano board
 - 3 x Clip on CT sensors
 - 1 x AC-AC adapter
-- USB to UART programmer (to upload firmware)
+- USB cable
 
 ## Upload pre compiled
 
