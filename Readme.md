@@ -25,6 +25,11 @@ Pulse counting and temperature monitoring using a single DS18B20 sensor is suppo
 - Suitable for operation on a three-phase, 4-wire supply at 50 or 60 Hz.
 - Can be calibrated for any voltage and current (default calibration is for emonTx with 100 A CTs & UK a.c. adapter).
 
+example output:
+
+      233.02 0.498 0.519 0.502 62.7 104.16 -98.55 57.14 18.0 50.05 0.8967 -0.8152 0.4883 0.0000 300.00  PLL is locked
+    Voltage  rmsL1 IrmsL2 IrmsL3 W   WL1    WL2    Wl3   Wh   Hz     PfL1   PfL2   PfL3    0     Temp
+    
 ## Limitations
 
 Because the voltage of only one phase can be measured, the sketch must assume that
